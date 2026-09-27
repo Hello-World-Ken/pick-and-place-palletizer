@@ -1,0 +1,297 @@
+[
+  {
+    "id": "tab1",
+    "type": "tab",
+    "label": "Machine Control"
+  },
+  {
+    "id": "ui_tab",
+    "type": "ui_tab",
+    "name": "Machine",
+    "icon": "dashboard"
+  },
+  {
+    "id": "ui_group_ctrl",
+    "type": "ui_group",
+    "name": "Control",
+    "tab": "ui_tab",
+    "order": 1,
+    "width": "6"
+  },
+  {
+    "id": "ui_group_status",
+    "type": "ui_group",
+    "name": "Status",
+    "tab": "ui_tab",
+    "order": 2,
+    "width": "6"
+  },
+
+  {
+    "id": "serial_in",
+    "type": "serial in",
+    "z": "tab1",
+    "name": "Arduino RX",
+    "serial": "serial_port",
+    "x": 120,
+    "y": 100,
+    "wires": [["parser"]]
+  },
+  {
+    "id": "serial_out",
+    "type": "serial out",
+    "z": "tab1",
+    "name": "Arduino TX",
+    "serial": "serial_port",
+    "x": 900,
+    "y": 260,
+    "wires": []
+  },
+
+  {
+    "id": "parser",
+    "type": "function",
+    "z": "tab1",
+    "name": "SAFE PARSER",
+    "outputs": 2,
+    "func": "// ===== กัน null =====\nif (!msg.payload) return null;\n\nlet str = msg.payload.toString().trim();\n\n// ===== EVENT =====\nif (str.startsWith(\"ARRIVED\")) {\n    return [msg, null];\n}\n\n// ===== FILTER =====\nif (!str.includes(\",\")) return null;\n\nlet d = str.split(\",\");\nif (d.length < 7) return null;\n\n// ===== SAFE NUMBER =====\nlet xRun = Number(d[1]);\nlet xPos = Number(d[2]);\nlet yRun = Number(d[3]);\nlet yPos = Number(d[4]);\nlet zRun = Number(d[5]);\nlet zPos = Number(d[6]);\n\nif (isNaN(xPos) || isNaN(yPos) || isNaN(zPos)) return null;\n\nmsg.payload = {\n    mode: d[0],\n    xRun: xRun,\n    xPos: xPos,\n    yRun: yRun,\n    yPos: yPos,\n    zRun: zRun,\n    zPos: zPos\n};\n\nreturn [null, msg];",
+    "x": 320,
+    "y": 100,
+    "wires": [["arrived"], ["split"]]
+  },
+
+  {
+    "id": "arrived",
+    "type": "ui_text",
+    "z": "tab1",
+    "group": "ui_group_status",
+    "label": "Event",
+    "format": "{{msg.payload}}",
+    "x": 550,
+    "y": 60,
+    "wires": []
+  },
+
+  {
+    "id": "split",
+    "type": "function",
+    "z": "tab1",
+    "name": "SPLIT",
+    "outputs": 6,
+    "func": "return [\n{payload:msg.payload.xPos},\n{payload:msg.payload.yPos},\n{payload:msg.payload.zPos},\n{payload:msg.payload.xRun},\n{payload:msg.payload.yRun},\n{payload:msg.payload.zRun}\n];",
+    "x": 550,
+    "y": 140,
+    "wires": [["x"],["y"],["z"],["xr"],["yr"],["zr"]]
+  },
+
+  {
+    "id": "x",
+    "type": "ui_gauge",
+    "z": "tab1",
+    "group": "ui_group_status",
+    "label": "X Position",
+    "min": -10000,
+    "max": 10000,
+    "x": 750,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "y",
+    "type": "ui_gauge",
+    "z": "tab1",
+    "group": "ui_group_status",
+    "label": "Y Position",
+    "min": -20000,
+    "max": 20000,
+    "x": 750,
+    "y": 140,
+    "wires": []
+  },
+  {
+    "id": "z",
+    "type": "ui_gauge",
+    "z": "tab1",
+    "group": "ui_group_status",
+    "label": "Z Position",
+    "min": -8000,
+    "max": 8000,
+    "x": 750,
+    "y": 180,
+    "wires": []
+  },
+
+  {
+    "id": "xr",
+    "type": "ui_text",
+    "z": "tab1",
+    "group": "ui_group_status",
+    "label": "X Run",
+    "format": "{{msg.payload}}",
+    "x": 900,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "yr",
+    "type": "ui_text",
+    "z": "tab1",
+    "group": "ui_group_status",
+    "label": "Y Run",
+    "format": "{{msg.payload}}",
+    "x": 900,
+    "y": 140,
+    "wires": []
+  },
+  {
+    "id": "zr",
+    "type": "ui_text",
+    "z": "tab1",
+    "group": "ui_group_status",
+    "label": "Z Run",
+    "format": "{{msg.payload}}",
+    "x": 900,
+    "y": 180,
+    "wires": []
+  },
+
+  {
+    "id": "auto",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "AUTO",
+    "payload": "AUTO",
+    "x": 120,
+    "y": 260,
+    "wires": [["serial_out"]]
+  },
+  {
+    "id": "manual",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "MANUAL",
+    "payload": "MANUAL",
+    "x": 120,
+    "y": 300,
+    "wires": [["serial_out"]]
+  },
+  {
+    "id": "box",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "BOX",
+    "payload": "BOX",
+    "x": 120,
+    "y": 340,
+    "wires": [["serial_out"]]
+  },
+
+  {
+    "id": "xp",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "X+",
+    "payload": "X+",
+    "x": 300,
+    "y": 260,
+    "wires": [["serial_out"]]
+  },
+  {
+    "id": "xm",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "X-",
+    "payload": "X-",
+    "x": 300,
+    "y": 300,
+    "wires": [["serial_out"]]
+  },
+  {
+    "id": "yp",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "Y+",
+    "payload": "Y+",
+    "x": 400,
+    "y": 260,
+    "wires": [["serial_out"]]
+  },
+  {
+    "id": "ym",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "Y-",
+    "payload": "Y-",
+    "x": 400,
+    "y": 300,
+    "wires": [["serial_out"]]
+  },
+  {
+    "id": "zp",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "Z+",
+    "payload": "Z+",
+    "x": 500,
+    "y": 260,
+    "wires": [["serial_out"]]
+  },
+  {
+    "id": "zm",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "Z-",
+    "payload": "Z-",
+    "x": 500,
+    "y": 300,
+    "wires": [["serial_out"]]
+  },
+  {
+    "id": "stop",
+    "type": "ui_button",
+    "z": "tab1",
+    "group": "ui_group_ctrl",
+    "label": "STOP",
+    "payload": "STOP",
+    "x": 600,
+    "y": 280,
+    "wires": [["serial_out"]]
+  },
+
+  {
+    "id": "init",
+    "type": "inject",
+    "z": "tab1",
+    "name": "INIT",
+    "props": [{"p": "payload"}],
+    "payload": "INIT,MANUAL,0,0,0",
+    "payloadType": "str",
+    "once": true,
+    "x": 120,
+    "y": 60,
+    "wires": [["serial_out"]]
+  },
+
+  {
+    "id": "serial_port",
+    "type": "serial-port",
+    "serialport": "COM5",
+    "baudrate": "9600",
+    "databits": "8",
+    "parity": "none",
+    "stopbits": "1",
+    "newline": "\\n",
+    "bin": "false",
+    "out": "char",
+    "addchar": "\\n"
+  }
+]
